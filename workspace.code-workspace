@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "..\\..\\da"
+		},
+		{
+			"path": "..\\..\\myBlog"
+		},
+		{
+			"path": "..\\..\\java"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "java"
+	}
+}
