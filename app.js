@@ -54,24 +54,118 @@ class UI {
 
 		productsCenter.innerHTML = result;
 	}
+
+	btnBadgeEvent(){
+		let btns = [...document.querySelectorAll(".bag-btn")];
+		btns.forEach(btn => {
+			let id = btn.dataset.id;
+
+			let cartItem = cart.find(item => item.id === id);
+
+			if(cartItem){
+				btn.innerText = "In Cart";
+				btn.disabled = true;
+			}else {
+				btn.addEventListener("click", (event)=>{
+					event.target.innerText = "In Cart";
+					event.target.disabled = true;
+
+					let cartItemById = {...Storage.getLocalProducts(id), ammount: 1};
+
+					cart = [...cart, cartItemById];
+
+					Storage.setLocalCart(cart);
+
+					this.setCartValue(cart);
+					this.addCartItem(cartItemById);
+					this.showCart();
+				})
+			}
+
+		})
+	}
+
+	showCart() {
+		cartOverlay.classList.add("transparentBcg");
+		cartData.classList.add("showCart");
+	}
+
+	setCartValue(cart) {
+		let tempTotol = 0;
+		let itemsTotol = 0;
+
+		cart.map(item => {
+			tempTotol += item.price * item.ammount;
+			itemsTotol += item.ammount
+		})
+		cartTotol.innerText = parseFloat(tempTotol.toFixed(2));
+		cartItems.innerText = itemsTotol;
+	}
+
+	addCartItem(item){
+		let cartItemDiv = document.createElement("div");
+		cartItemDiv.classList.add("cart-item");
+		cartItemDiv.innerHTML =`
+             			<img src="${item.img}">
+                        <div>
+                            <h4>${item.title}</h4>
+                            <h5>$${item.price}</h5>
+                            <span class="remove-item">remove</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-chevron-up"></i>
+                            <p class="item-amount">${item.ammount}</p>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+		`
+
+		cartContent.appendChild(cartItemDiv);
+	}
+
+	setupApp() {
+		cart = Storage.getLocalCart();
+		this.setCartValue(cart);
+		this.populars(cart);
+	}
+
+	populars(cart){
+		cart.forEach(item => {
+			this.addCartItem(item);
+		})
+	}
 }
+
 class Storage {
-	static getLocalProducts(){
-		return localStorage.getItem("products")
+	static getLocalProducts(id){
+		let products = localStorage.getItem("products")? JSON.parse(localStorage.getItem("products")) : [];
+		return products.find(item=> item.id === id);
 	}
 
 	static setLocalProducts(products) {
 		localStorage.setItem("products", JSON.stringify(products));
 	}
-}
 
+	static setLocalCart(cart){
+		localStorage.setItem("cart",JSON.stringify(cart))
+	}
+
+	static getLocalCart(){
+		return JSON.parse(localStorage.getItem("cart"));
+	}
+}
+Storage.getLocalProducts(5)
 document.addEventListener("DOMContentLoaded", ()=> {
 	const ui = new UI();
 	const products = new Products();
+
+	ui.setupApp();
 
 	products.getProductsData(API)
 		.then(products => {
 			ui.displayProducts(products);
 			Storage.setLocalProducts(products);
+		})
+		.then(()=>{
+			ui.btnBadgeEvent();
 		})
 })
