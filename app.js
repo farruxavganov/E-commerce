@@ -10,30 +10,31 @@ const productsCenter = document.querySelector(".products-center");
 const API = "products.json";
 
 let cart = [];
+let cartBtnDOM = [];
 
 class Products {
-	async getProductsData(api){
+	async getProductsData(api) {
 		try {
 			let result = await fetch(api);
 			let data = await result.json();
 			let products = data.items;
 			products = products.map(product => {
-				let {title,price} = product.fields;
+				let { title, price } = product.fields;
 				let img = product.fields.image.fields.file.url;
-				let {id} = product.sys;
+				let { id } = product.sys;
 
-				return {title,price,img, id};
+				return { title, price, img, id };
 			})
 
 			return products;
-		}catch (e) {
+		} catch (e) {
 			let err = new Error(e.message);
 			console.error(err)
 		}
 	}
 }
 class UI {
-	displayProducts(products){
+	displayProducts(products) {
 		let result = '';
 
 		products.forEach(product => {
@@ -55,22 +56,23 @@ class UI {
 		productsCenter.innerHTML = result;
 	}
 
-	btnBadgeEvent(){
+	btnBadgeEvent() {
 		let btns = [...document.querySelectorAll(".bag-btn")];
+		cartBtnDOM = btns;
 		btns.forEach(btn => {
 			let id = btn.dataset.id;
 
 			let cartItem = cart.find(item => item.id === id);
 
-			if(cartItem){
+			if (cartItem) {
 				btn.innerText = "In Cart";
 				btn.disabled = true;
-			}else {
-				btn.addEventListener("click", (event)=>{
+			} else {
+				btn.addEventListener("click", (event) => {
 					event.target.innerText = "In Cart";
 					event.target.disabled = true;
 
-					let cartItemById = {...Storage.getLocalProducts(id), ammount: 1};
+					let cartItemById = { ...Storage.getLocalProducts(id), ammount: 1 };
 
 					cart = [...cart, cartItemById];
 
@@ -90,6 +92,11 @@ class UI {
 		cartData.classList.add("showCart");
 	}
 
+	hidnCart() {
+		cartOverlay.classList.remove("transparentBcg");
+		cartData.classList.remove("showCart");
+	}
+
 	setCartValue(cart) {
 		let tempTotol = 0;
 		let itemsTotol = 0;
@@ -102,15 +109,15 @@ class UI {
 		cartItems.innerText = itemsTotol;
 	}
 
-	addCartItem(item){
+	addCartItem(item) {
 		let cartItemDiv = document.createElement("div");
 		cartItemDiv.classList.add("cart-item");
-		cartItemDiv.innerHTML =`
+		cartItemDiv.innerHTML = `
              			<img src="${item.img}">
                         <div>
                             <h4>${item.title}</h4>
                             <h5>$${item.price}</h5>
-                            <span class="remove-item">remove</span>
+                            <span class="remove-item" data-id="${item.id}">remove</span>
                         </div>
                         <div>
                             <i class="fas fa-chevron-up"></i>
@@ -120,41 +127,87 @@ class UI {
 		`
 
 		cartContent.appendChild(cartItemDiv);
+
+		// const removeItem = document.querySelector("")
 	}
 
 	setupApp() {
 		cart = Storage.getLocalCart();
+		console.log(cart)
 		this.setCartValue(cart);
 		this.populars(cart);
+
+		cartBtn.addEventListener("click", this.showCart);
+		closeCart.addEventListener("click", this.hidnCart);
 	}
 
-	populars(cart){
+	populars(cart) {
 		cart.forEach(item => {
 			this.addCartItem(item);
 		})
 	}
+
+	cartLogic() {
+		clearBtn.addEventListener("click", ()=> {this.clearItems()});
+
+		cartContent.addEventListener("click", (e)=>{
+			if(e.target.classList.contains("remove-item")){
+				let removeItem = e.target;
+				let id = removeItem.dataset.id;
+				let parrent = removeItem.parentElement.parentElement;
+				cartContent.removeChild(parrent);
+				this.removeItemCart(id);
+			}
+			
+		})
+	}
+
+	clearItems() {
+		cart.forEach(item => this.removeItemCart(item.id));
+		while(cartContent.children.length > 0) {
+			cartContent.removeChild(cartContent.children[0]);
+		}
+
+		this.hidnCart();
+
+	}
+
+	removeItemCart(id) {
+		cart = cart.filter(item => item.id !== id);
+		Storage.setLocalCart(cart);
+		this.setCartValue(cart);
+
+		let button = this.getSingleBtn(id);
+		button.disabled = false;
+		button.innerHTML = `<i class="fas fa-shopping-cart"></i>
+                            add to bag`;
+	}
+
+	getSingleBtn(id) {
+		return cartBtnDOM.find(item => item.dataset.id === id);
+	}
 }
 
 class Storage {
-	static getLocalProducts(id){
-		let products = localStorage.getItem("products")? JSON.parse(localStorage.getItem("products")) : [];
-		return products.find(item=> item.id === id);
+	static getLocalProducts(id) {
+		let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
+		return products.find(item => item.id === id);
 	}
 
 	static setLocalProducts(products) {
 		localStorage.setItem("products", JSON.stringify(products));
 	}
 
-	static setLocalCart(cart){
-		localStorage.setItem("cart",JSON.stringify(cart))
+	static setLocalCart(cart) {
+		localStorage.setItem("cart", JSON.stringify(cart))
 	}
 
-	static getLocalCart(){
-		return JSON.parse(localStorage.getItem("cart"));
+	static getLocalCart() {
+		return localStorage.getItem("cart")? JSON.parse(localStorage.getItem("cart")) : [];
 	}
 }
 Storage.getLocalProducts(5)
-document.addEventListener("DOMContentLoaded", ()=> {
+document.addEventListener("DOMContentLoaded", () => {
 	const ui = new UI();
 	const products = new Products();
 
@@ -165,7 +218,8 @@ document.addEventListener("DOMContentLoaded", ()=> {
 			ui.displayProducts(products);
 			Storage.setLocalProducts(products);
 		})
-		.then(()=>{
+		.then(() => {
 			ui.btnBadgeEvent();
+			ui.cartLogic();
 		})
 })
