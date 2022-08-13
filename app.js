@@ -68,10 +68,10 @@ class UI {
 				btn.innerText = "In Cart";
 				btn.disabled = true;
 			} else {
-				btn.addEventListener("click", (event) => {
+				btn.onclick = (event) => {
 					event.target.innerText = "In Cart";
 					event.target.disabled = true;
-
+ 
 					let cartItemById = { ...Storage.getLocalProducts(id), ammount: 1 };
 
 					cart = [...cart, cartItemById];
@@ -81,11 +81,12 @@ class UI {
 					this.setCartValue(cart);
 					this.addCartItem(cartItemById);
 					this.showCart();
-				})
+				}
 			}
 
 		})
 	}
+
 
 	showCart() {
 		cartOverlay.classList.add("transparentBcg");
@@ -120,9 +121,9 @@ class UI {
                             <span class="remove-item" data-id="${item.id}">remove</span>
                         </div>
                         <div>
-                            <i class="fas fa-chevron-up"></i>
+                            <i class="fas fa-chevron-up" data-id="${item.id}">up</i>
                             <p class="item-amount">${item.ammount}</p>
-                            <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-chevron-down" data-id="${item.id}">down</i>
                         </div>
 		`
 
@@ -139,6 +140,7 @@ class UI {
 
 		cartBtn.addEventListener("click", this.showCart);
 		closeCart.addEventListener("click", this.hidnCart);
+
 	}
 
 	populars(cart) {
@@ -158,6 +160,26 @@ class UI {
 				cartContent.removeChild(parrent);
 				this.removeItemCart(id);
 			}
+
+			if(e.target.classList.contains("fa-chevron-up")){
+				let id = e.target.dataset.id;
+				
+				let product = cart.find(item => item.id === id);
+				product.ammount = product.ammount + 1;
+				document.querySelector(".item-amount").innerHTML = product.ammount;
+				this.setCartValue(cart);
+				Storage.setLocalCart(cart);
+			}
+
+			if(e.target.classList.contains("fa-chevron-down")){
+				let id = e.target.dataset.id;
+				
+				let product = cart.find(item => item.id === id);
+				product.ammount = product.ammount - 1;
+				document.querySelector(".item-amount").innerHTML = product.ammount;
+				this.setCartValue(cart);
+				Storage.setLocalCart(cart);
+			}
 			
 		})
 	}
@@ -167,7 +189,7 @@ class UI {
 		while(cartContent.children.length > 0) {
 			cartContent.removeChild(cartContent.children[0]);
 		}
-
+		this.btnBadgeEvent();
 		this.hidnCart();
 
 	}
