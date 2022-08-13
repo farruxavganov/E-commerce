@@ -121,15 +121,13 @@ class UI {
                             <span class="remove-item" data-id="${item.id}">remove</span>
                         </div>
                         <div>
-                            <i class="fas fa-chevron-up" data-id="${item.id}">up</i>
+                            <i class="fas fa-chevron-up" data-id="${item.id}"></i>
                             <p class="item-amount">${item.ammount}</p>
-                            <i class="fas fa-chevron-down" data-id="${item.id}">down</i>
+                            <i class="fas fa-chevron-down" data-id="${item.id}"></i>
                         </div>
 		`
 
 		cartContent.appendChild(cartItemDiv);
-
-		// const removeItem = document.querySelector("")
 	}
 
 	setupApp() {
@@ -176,6 +174,9 @@ class UI {
 				
 				let product = cart.find(item => item.id === id);
 				product.ammount = product.ammount - 1;
+				if(product.ammount === -1){
+					product.ammount = 0;
+				}
 				document.querySelector(".item-amount").innerHTML = product.ammount;
 				this.setCartValue(cart);
 				Storage.setLocalCart(cart);
