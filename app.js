@@ -171,11 +171,14 @@ class UI {
 
 			if(e.target.classList.contains("fa-chevron-down")){
 				let id = e.target.dataset.id;
-				
+				let parrent = e.target.parentElement.parentElement;
+
 				let product = cart.find(item => item.id === id);
 				product.ammount = product.ammount - 1;
 				if(product.ammount === -1){
 					product.ammount = 0;
+					cartContent.removeChild(parrent);
+					this.removeItemCart(id);
 				}
 				document.querySelector(".item-amount").innerHTML = product.ammount;
 				this.setCartValue(cart);
