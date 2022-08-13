@@ -175,7 +175,7 @@ class UI {
 
 				let product = cart.find(item => item.id === id);
 				product.ammount = product.ammount - 1;
-				if(product.ammount === -1){
+				if(product.ammount === 0){
 					product.ammount = 0;
 					cartContent.removeChild(parrent);
 					this.removeItemCart(id);
